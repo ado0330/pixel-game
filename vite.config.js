@@ -4,5 +4,5 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './', // 设置为相对路径，支持 GitHub Pages 子目录部署
+  base: '/pixel-game/', // 设置为仓库名称，确保 GitHub Pages 资源路径正确
 })
