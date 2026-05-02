@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Home = ({ onStart, onTeacherMode }) => {
+const Home = ({ onStart, onTeacherMode, onLeaderboard }) => {
   const [id, setId] = useState('');
 
   const handleSubmit = (e) => {
@@ -33,7 +33,10 @@ const Home = ({ onStart, onTeacherMode }) => {
         </button>
       </form>
 
-      <div style={{ marginTop: '50px' }}>
+      <div style={{ marginTop: '40px', display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <button className="pixel-btn" onClick={onLeaderboard} style={{ background: '#f39c12', fontSize: '10px', padding: '8px 12px' }}>
+          🏆 LEADERBOARD
+        </button>
         <button className="pixel-btn" onClick={onTeacherMode} style={{ background: '#8e44ad', fontSize: '10px', padding: '8px 12px' }}>
           TEACHER MODE
         </button>

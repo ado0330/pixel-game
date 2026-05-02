@@ -34,6 +34,30 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify(questions))
       .setMimeType(ContentService.MimeType.JSON);
   }
+
+  if (action === 'getLeaderboard') {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('成绩');
+    const data = sheet.getDataRange().getValues();
+    
+    // 第一行是标题，跳过
+    const headers = data.shift();
+    
+    // 栏位顺序：ID | 闯关次数 | 最高分 | 第一次玩的分数 | 花了几次通关
+    const players = data
+      .filter(row => row[0] !== '')
+      .map(row => ({
+        id: row[0].toString(),
+        attempts: Number(row[1]) || 0,
+        highest: Number(row[2]) || 0,
+        firstScore: row[3] !== '' ? Number(row[3]) : null,
+        passAttempts: row[4] !== '' ? Number(row[4]) : null
+      }))
+      .sort((a, b) => b.highest - a.highest)
+      .slice(0, 10);
+    
+    return ContentService.createTextOutput(JSON.stringify(players))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
   
   return ContentService.createTextOutput("Invalid Action");
 }
