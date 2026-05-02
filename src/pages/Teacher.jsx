@@ -136,7 +136,7 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
          <h3 style={{ margin: 0 }}>题库管理</h3>
-         <div>
+         <div style={{ display: 'flex', gap: '5px' }}>
             <input 
               type="file" 
               accept=".xlsx, .xls, .csv" 
@@ -144,11 +144,27 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
               ref={fileInputRef}
               onChange={handleFileUpload}
             />
-            <button className="pixel-btn" onClick={triggerFileInput} style={{ background: '#2980b9', fontSize: '10px', marginRight: '10px' }}>
-               📥 批量导入 (Excel)
+            <button className="pixel-btn" onClick={() => {
+              const templateData = [{
+                '题目': '世界上陆地面积最大的国家是？',
+                'A': '中国',
+                'B': '美国',
+                'C': '俄罗斯',
+                'D': '加拿大',
+                '解答': 'C'
+              }];
+              const ws = XLSX.utils.json_to_sheet(templateData);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "题库模板");
+              XLSX.writeFile(wb, "题目导入模板.xlsx");
+            }} style={{ background: '#27ae60', fontSize: '10px', padding: '5px' }}>
+               📄 下载模板
             </button>
-            <button className="pixel-btn" onClick={handleClear} style={{ background: '#c0392b', fontSize: '10px' }}>
-               🗑️ 清空自定义
+            <button className="pixel-btn" onClick={triggerFileInput} style={{ background: '#2980b9', fontSize: '10px', padding: '5px' }}>
+               📥 批量导入
+            </button>
+            <button className="pixel-btn" onClick={handleClear} style={{ background: '#c0392b', fontSize: '10px', padding: '5px' }}>
+               🗑️ 清空
             </button>
          </div>
       </div>
