@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import * as XLSX from 'xlsx';
 
 const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [credentials, setCredentials] = useState({ id: '', password: '' });
   const [newQ, setNewQ] = useState({ question: '', A: '', B: '', C: '', D: '', answer: 'A' });
+  const fileInputRef = useRef(null);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -32,6 +34,64 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
       localStorage.removeItem('pixel_custom_questions');
       setCustomQuestions([]);
       alert('已恢复默认题库。');
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        // 验证和格式化数据
+        const importedQuestions = data.map((row, index) => {
+          // 容错处理：支持中文或英文列名
+          const question = row.question || row['题目'] || '';
+          const A = row.A || row['选项A'] || '';
+          const B = row.B || row['选项B'] || '';
+          const C = row.C || row['选项C'] || '';
+          const D = row.D || row['选项D'] || '';
+          const answer = (row.answer || row['答案'] || '').toUpperCase();
+
+          if (!question || !A || !B || !C || !D || !answer) {
+            throw new Error(`第 ${index + 2} 行数据不完整，请检查。必须包含：题目, A, B, C, D, 答案`);
+          }
+          if (!['A', 'B', 'C', 'D'].includes(answer)) {
+             throw new Error(`第 ${index + 2} 行答案格式错误，只能是 A, B, C 或 D`);
+          }
+
+          return { question, A, B, C, D, answer, id: Date.now() + index };
+        });
+
+        if (importedQuestions.length > 0) {
+          const updated = [...customQuestions, ...importedQuestions];
+          setCustomQuestions(updated);
+          localStorage.setItem('pixel_custom_questions', JSON.stringify(updated));
+          alert(`成功导入 ${importedQuestions.length} 道题目！`);
+        } else {
+          alert('未能从文件中读取到题目数据。');
+        }
+      } catch (err) {
+        alert('导入失败: ' + err.message);
+      }
+      // 重置 input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
@@ -73,8 +133,27 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
       <button className="pixel-btn" onClick={onBack}>{'< LOGOUT'}</button>
       <h2 style={{ textAlign: 'center', color: '#8e44ad' }}>TEACHER MODE</h2>
       
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+         <h3 style={{ margin: 0 }}>题库管理</h3>
+         <div>
+            <input 
+              type="file" 
+              accept=".xlsx, .xls, .csv" 
+              style={{ display: 'none' }} 
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+            />
+            <button className="pixel-btn" onClick={triggerFileInput} style={{ background: '#2980b9', fontSize: '10px', marginRight: '10px' }}>
+               📥 批量导入 (Excel)
+            </button>
+            <button className="pixel-btn" onClick={handleClear} style={{ background: '#c0392b', fontSize: '10px' }}>
+               🗑️ 清空自定义
+            </button>
+         </div>
+      </div>
+
       <div style={{ background: '#34495e', padding: '20px', border: '4px solid #ecf0f1', marginBottom: '20px' }}>
-        <h3 style={{ marginTop: 0 }}>新增题目</h3>
+        <h3 style={{ marginTop: 0 }}>单题新增</h3>
         <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <input className="pixel-input" style={{ width: '100%', maxWidth: '100%', margin: '0' }} placeholder="题目内容..." value={newQ.question} onChange={e => setNewQ({...newQ, question: e.target.value})} required />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -98,6 +177,9 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
 
       <div>
         <h3>目前自定义题库 ({customQuestions.length} 题)</h3>
+        <p style={{ fontSize: '10px', color: '#bdc3c7', marginBottom: '10px' }}>
+          Excel 导入格式要求：必须包含列名 <code style={{background: '#000', padding: '2px 4px'}}>题目, A, B, C, D, 答案</code>
+        </p>
         {customQuestions.length === 0 ? (
           <p style={{ fontSize: '12px', color: '#bdc3c7' }}>当前未设置自定义题目，游戏将使用系统默认的常识题。</p>
         ) : (
@@ -112,7 +194,6 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
             ))}
           </div>
         )}
-        <button className="pixel-btn" onClick={handleClear} style={{ background: '#c0392b', marginTop: '20px', fontSize: '10px' }}>CLEAR ALL CUSTOM</button>
       </div>
     </div>
   );
