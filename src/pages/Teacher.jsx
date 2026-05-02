@@ -44,8 +44,8 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
-        const bstr = evt.target.result;
-        const wb = XLSX.read(bstr, { type: 'binary' });
+        const arrayBuffer = evt.target.result;
+        const wb = XLSX.read(arrayBuffer, { type: 'array' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws);
@@ -54,13 +54,14 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
         const importedQuestions = data.map((row, index) => {
           // 容错处理：支持中文或英文列名
           const question = row.question || row['题目'] || '';
-          const A = row.A || row['选项A'] || '';
-          const B = row.B || row['选项B'] || '';
-          const C = row.C || row['选项C'] || '';
-          const D = row.D || row['选项D'] || '';
+          const A = row.A || row['A'] || row['选项A'] || '';
+          const B = row.B || row['B'] || row['选项B'] || '';
+          const C = row.C || row['C'] || row['选项C'] || '';
+          const D = row.D || row['D'] || row['选项D'] || '';
           const answer = (row.answer || row['答案'] || row['解答'] || '').toUpperCase();
 
           if (!question || !A || !B || !C || !D || !answer) {
+            console.log("Missing data row:", row);
             throw new Error(`第 ${index + 2} 行数据不完整，请检查。必须包含：题目, A, B, C, D, 答案/解答`);
           }
           if (!['A', 'B', 'C', 'D'].includes(answer)) {
@@ -86,7 +87,7 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
         fileInputRef.current.value = '';
       }
     };
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
   const triggerFileInput = () => {
