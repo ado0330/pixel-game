@@ -80,11 +80,11 @@ function App() {
     try {
       const url = import.meta.env.VITE_GAS_API_URL;
       if (url) {
-        await fetch(url, {
+        const resp = await fetch(url, {
           method: 'POST',
-          mode: 'no-cors', // Because GAS might have CORS issues on POST without proper headers
+          redirect: 'follow',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'text/plain;charset=utf-8',
           },
           body: JSON.stringify({
             action: 'submitScore',
@@ -92,6 +92,8 @@ function App() {
             score: finalScore
           })
         });
+        const result = await resp.json();
+        console.log('Score submitted:', result);
       }
     } catch (error) {
       console.error("Failed to submit score:", error);
