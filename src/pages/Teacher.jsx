@@ -96,6 +96,35 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
     }
   };
 
+  const [selectedQs, setSelectedQs] = useState([]);
+
+  const handleToggleSelect = (uid) => {
+    if (selectedQs.includes(uid)) {
+      setSelectedQs(selectedQs.filter(id => id !== uid));
+    } else {
+      setSelectedQs([...selectedQs, uid]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedQs.length === customQuestions.length && customQuestions.length > 0) {
+      setSelectedQs([]);
+    } else {
+      setSelectedQs(customQuestions.map((q, i) => q.id || i));
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedQs.length === 0) return;
+    if (confirm(`确定要删除选中的 ${selectedQs.length} 道题目吗？`)) {
+      const updated = customQuestions.filter((q, i) => !selectedQs.includes(q.id || i));
+      setCustomQuestions(updated);
+      localStorage.setItem('pixel_custom_questions', JSON.stringify(updated));
+      setSelectedQs([]);
+      alert('已删除选中的题目。');
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div style={{ textAlign: 'center', width: '100%' }}>
@@ -164,7 +193,7 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
                📥 批量导入
             </button>
             <button className="pixel-btn" onClick={handleClear} style={{ background: '#c0392b', fontSize: '10px', padding: '5px' }}>
-               🗑️ 清空
+               🗑️ 清空全部
             </button>
          </div>
       </div>
@@ -193,7 +222,19 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
       </div>
 
       <div>
-        <h3>目前自定义题库 ({customQuestions.length} 题)</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3>目前自定义题库 ({customQuestions.length} 题)</h3>
+          {customQuestions.length > 0 && (
+            <div>
+              <button className="pixel-btn" onClick={handleSelectAll} style={{ background: '#f39c12', fontSize: '10px', padding: '5px', marginRight: '5px' }}>
+                {selectedQs.length === customQuestions.length ? '取消全选' : '全选'}
+              </button>
+              <button className="pixel-btn" onClick={handleDeleteSelected} disabled={selectedQs.length === 0} style={{ background: selectedQs.length === 0 ? '#7f8c8d' : '#e74c3c', fontSize: '10px', padding: '5px' }}>
+                删除选定 ({selectedQs.length})
+              </button>
+            </div>
+          )}
+        </div>
         <p style={{ fontSize: '10px', color: '#bdc3c7', marginBottom: '10px' }}>
           Excel 导入格式要求：必须包含列名 <code style={{background: '#000', padding: '2px 4px'}}>题目, A, B, C, D, 答案</code>
         </p>
@@ -201,14 +242,25 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
           <p style={{ fontSize: '12px', color: '#bdc3c7' }}>当前未设置自定义题目，游戏将使用系统默认的常识题。</p>
         ) : (
           <div style={{ maxHeight: '200px', overflowY: 'auto', background: '#2c3e50', padding: '10px', border: '2px solid #ecf0f1' }}>
-            {customQuestions.map((q, i) => (
-              <div key={q.id || i} style={{ borderBottom: '1px solid #7f8c8d', paddingBottom: '10px', marginBottom: '10px' }}>
-                <p style={{ margin: '5px 0' }}><strong>{i+1}. {q.question}</strong></p>
-                <p style={{ fontSize: '12px', margin: '0' }}>
-                  A:{q.A} B:{q.B} C:{q.C} D:{q.D} <span style={{color:'#e74c3c', marginLeft: '10px'}}>答:{q.answer}</span>
-                </p>
-              </div>
-            ))}
+            {customQuestions.map((q, i) => {
+              const uid = q.id || i;
+              return (
+                <div key={uid} style={{ borderBottom: '1px solid #7f8c8d', paddingBottom: '10px', marginBottom: '10px', display: 'flex', alignItems: 'flex-start' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedQs.includes(uid)} 
+                    onChange={() => handleToggleSelect(uid)}
+                    style={{ marginTop: '5px', marginRight: '10px', transform: 'scale(1.5)', cursor: 'pointer' }}
+                  />
+                  <div>
+                    <p style={{ margin: '5px 0' }}><strong>{i+1}. {q.question}</strong></p>
+                    <p style={{ fontSize: '12px', margin: '0' }}>
+                      A:{q.A} B:{q.B} C:{q.C} D:{q.D} <span style={{color:'#e74c3c', marginLeft: '10px'}}>答:{q.answer}</span>
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
