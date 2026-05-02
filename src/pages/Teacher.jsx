@@ -58,10 +58,10 @@ const Teacher = ({ customQuestions, setCustomQuestions, onBack }) => {
           const B = row.B || row['选项B'] || '';
           const C = row.C || row['选项C'] || '';
           const D = row.D || row['选项D'] || '';
-          const answer = (row.answer || row['答案'] || '').toUpperCase();
+          const answer = (row.answer || row['答案'] || row['解答'] || '').toUpperCase();
 
           if (!question || !A || !B || !C || !D || !answer) {
-            throw new Error(`第 ${index + 2} 行数据不完整，请检查。必须包含：题目, A, B, C, D, 答案`);
+            throw new Error(`第 ${index + 2} 行数据不完整，请检查。必须包含：题目, A, B, C, D, 答案/解答`);
           }
           if (!['A', 'B', 'C', 'D'].includes(answer)) {
              throw new Error(`第 ${index + 2} 行答案格式错误，只能是 A, B, C 或 D`);
