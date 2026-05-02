@@ -78,7 +78,7 @@ const Leaderboard = ({ onBack }) => {
                   </td>
                   <td style={{ padding: '10px 5px', textAlign: 'center' }}>{row.attempts}</td>
                   <td style={{ padding: '10px 5px', textAlign: 'center' }}>
-                    {row.passAttempts ? `第${row.passAttempts}次` : '—'}
+                    {row.passAttempts ? row.passAttempts : '—'}
                   </td>
                 </tr>
               ))}
